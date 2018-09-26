@@ -1,5 +1,5 @@
 layout(lines_adjacency) in;
-layout(triangle_strip, max_vertices = 4) out;
+layout(line_strip, max_vertices = 4) out;
 
 uniform mat4 uv_modelViewProjectionMatrix;
 uniform mat4 uv_modelViewMatrix;
@@ -12,22 +12,13 @@ uniform mat4 uv_scene2ObjectMatrix;
 uniform int uv_simulationtimeDays;
 uniform float uv_simulationtimeSeconds;
 uniform float uv_fade;
+uniform float phaseShift;
 
-uniform float particleSize;
-uniform vec3 particleColor;
-uniform float particleIntensity;
-uniform float colorScale;
-uniform int colorType;
-uniform sampler2D viridis;
-uniform sampler2D inferno;
-uniform vec2 logTempLims;
-uniform vec2 logDensityLims;
 
-in vec3 StartPos[];
-in float time[];
-in float Temp[];
-in float Rho[];
-out vec4 color;
+in vec3 SC1[];
+in vec3 SC2[];
+in vec3 SC3[];
+in float Time[];
 
 out vec2 texcoord;
 const float simLength  = 360.0;
@@ -83,28 +74,32 @@ float catmullRomSpline(float x, vec4 v) {
 
 void main()
 {
-    float simTime = mod(uv_simulationtimeSeconds,simLength);
-	color = vec4(particleColor,particleIntensity);
+    float simTime = mod(1.0*uv_simulationtimeDays + phaseShift*365.25 ,365.25) * 86400. + uv_simulationtimeSeconds;
 	// Draw if in correct timestep 	
-	if (simTime >=time[1] && simTime <time[2]&& time[0]<time[3]) {
-		float interpTime=(simTime-time[1])/(time[2]-time[1]);
-		vec3 pos = mix(StartPos[1],StartPos[2],interpTime);		
-		pos.x=catmullRomSpline(interpTime,vec4(StartPos[0].x,StartPos[1].x,StartPos[2].x,StartPos[3].x));
-		pos.y=catmullRomSpline(interpTime,vec4(StartPos[0].y,StartPos[1].y,StartPos[2].y,StartPos[3].y));
-		pos.z=catmullRomSpline(interpTime,vec4(StartPos[0].z,StartPos[1].z,StartPos[2].z,StartPos[3].z));		
-		vec4 particlePos = vec4(pos/1e5,1.0); //sim is in cm, scene in km			
-		if (colorType==1){
-			float logT= log(catmullRomSpline(interpTime,vec4(Temp[0],Temp[1],Temp[2],Temp[3])))/log(10.0);
-			float colorPos = (logT-logTempLims[0])/(logTempLims[1]-logTempLims[0]);
-			vec4 tempColor= texture(inferno,vec2(colorScale*colorPos,0.5));
-			color = vec4(tempColor.rgb,2.0*particleIntensity);
-		}
-		if (colorType==2){
-			float logRho= log(catmullRomSpline(interpTime,vec4(Rho[0],Rho[1],Rho[2],Rho[3])))/log(10.0);
-			float colorPos = (logRho-logDensityLims[0])/(logDensityLims[1]-logDensityLims[0]);
-			vec4 tempColor= texture(viridis,vec2(colorScale*colorPos,0.5));
-			color = vec4(tempColor.rgb,2.0*particleIntensity);
-		}
-		drawSprite(particlePos,particleSize,0.0);
+	if (simTime >=Time[1] && simTime <Time[2]) {
+		float interpTime=(simTime-Time[1])/(Time[2]-Time[1]);
+		vec3 pos;
+		pos.x=catmullRomSpline(interpTime,vec4(SC1[0].x,SC1[1].x,SC1[2].x,SC1[3].x));
+		pos.y=catmullRomSpline(interpTime,vec4(SC1[0].y,SC1[1].y,SC1[2].y,SC1[3].y));
+		pos.z=catmullRomSpline(interpTime,vec4(SC1[0].z,SC1[1].z,SC1[2].z,SC1[3].z));		
+		vec4 sc1Pos = vec4(pos/100000000.0,1.0); //from meters to SolarSystem units
+		gl_Position = uv_modelViewProjectionMatrix * vec4(sc1Pos);
+		EmitVertex();	
+		pos.x=catmullRomSpline(interpTime,vec4(SC2[0].x,SC2[1].x,SC2[2].x,SC2[3].x));
+		pos.y=catmullRomSpline(interpTime,vec4(SC2[0].y,SC2[1].y,SC2[2].y,SC2[3].y));
+		pos.z=catmullRomSpline(interpTime,vec4(SC2[0].z,SC2[1].z,SC2[2].z,SC2[3].z));		
+		vec4 sc2Pos = vec4(pos/100000000.0,1.0); //from meters to SolarSystem units
+		gl_Position = uv_modelViewProjectionMatrix * vec4(sc2Pos);
+		EmitVertex();	
+		pos.x=catmullRomSpline(interpTime,vec4(SC3[0].x,SC3[1].x,SC3[2].x,SC3[3].x));
+		pos.y=catmullRomSpline(interpTime,vec4(SC3[0].y,SC3[1].y,SC3[2].y,SC3[3].y));
+		pos.z=catmullRomSpline(interpTime,vec4(SC3[0].z,SC3[1].z,SC3[2].z,SC3[3].z));		
+		vec4 sc3Pos = vec4(pos/100000000.0,1.0); //from meters to SolarSystem units
+		gl_Position = uv_modelViewProjectionMatrix * vec4(sc3Pos);
+		EmitVertex();
+		gl_Position = uv_modelViewProjectionMatrix * vec4(sc1Pos);
+		EmitVertex();
+		EndPrimitive();
+
 	}
 }
