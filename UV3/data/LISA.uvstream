@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<DataStream version="0.1">
+    <PrimitiveType>lines_adjacency</PrimitiveType>
+    <DataBindings>
+        <Variable>
+            <Name>sc1</Name>         
+            <Type>vec3f</Type>
+        </Variable>
+        <Variable>
+            <Name>sc2</Name>         
+            <Type>vec3f</Type>
+        </Variable>             
+        <Variable>
+            <Name>sc3</Name>         
+            <Type>vec3f</Type>
+        </Variable>             
+        <Variable>
+            <Name>time</Name>         
+            <Type>float</Type>
+        </Variable>                       
+    </DataBindings>
+
+    <CSVData>
+        <Path>spacecrafts.csv</Path>
+        <Headers>
+            <Variable>              
+                <Cols>0,1,2</Cols>
+            </Variable>
+            <Variable>              
+                <Cols>3,4,5</Cols>
+            </Variable>                     
+            <Variable>              
+                <Cols>6,7,8</Cols>
+            </Variable>                     
+            <Variable>              
+                <Cols>9</Cols>
+            </Variable>                                      
+        </Headers>
+    </CSVData>
+</DataStream>  
